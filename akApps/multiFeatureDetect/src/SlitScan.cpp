@@ -11,6 +11,7 @@
 
 SlitScan::SlitScan(){}
 
+//--------------------------------------------------------------
 void SlitScan::setup(int w, int h){
     scanWidth = w;
     scanHeight = h;
@@ -18,6 +19,7 @@ void SlitScan::setup(int w, int h){
     scan.allocate(scanWidth, scanHeight, OF_IMAGE_COLOR);
 }
 
+//--------------------------------------------------------------
 void SlitScan::update(ofImage img, int colPosition){
     img.resize(scanWidth, scanHeight); // resize the src image so that it's scaled
     if(scan.getWidth() != scanWidth || scan.getHeight() != scanHeight){
@@ -45,19 +47,23 @@ void SlitScan::update(ofImage img, int colPosition){
     
 }
 
+//--------------------------------------------------------------
 void SlitScan::draw(int x, int y){
     scan.draw(x, y);
 }
 
+//--------------------------------------------------------------
 void SlitScan::draw(int x, int y, int w, int h){
     scan.resize(w,h);
     scan.draw(x,y);
 }
 
+//--------------------------------------------------------------
 ofImage SlitScan::getImg(){
     return scan;
 }
 
+//--------------------------------------------------------------
 // NOTE: if you are going to use grayscale, you'll have to update this so that the
 void SlitScan::shiftPixelsLeft(ofImage * img){
     unsigned char * pixels = img->getPixels().getData(); // the val for the pointers

@@ -26,6 +26,6 @@ public:
     
     ofImage tmpImg; 
     SlitScan scan;
-    
+    ofRectangle lastDisplayedPosition; 
     
 };
