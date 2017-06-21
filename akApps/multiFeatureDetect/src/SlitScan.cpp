@@ -19,6 +19,8 @@ void SlitScan::setup(int w, int h){
 }
 
 void SlitScan::update(ofImage img, int colPosition){
+    img.resize(scanWidth, scanHeight); // resize the src image so that it's scaled
+    
     unsigned char * srcPixels = img.getPixels().getData();
     unsigned char * scanPixels = scan.getPixels().getData();
     
