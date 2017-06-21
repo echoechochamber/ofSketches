@@ -20,6 +20,10 @@ void SlitScan::setup(int w, int h){
 
 void SlitScan::update(ofImage img, int colPosition){
     img.resize(scanWidth, scanHeight); // resize the src image so that it's scaled
+    if(scan.getWidth() != scanWidth || scan.getHeight() != scanHeight){
+        scan.resize(scanWidth, scanHeight);
+    }
+    
     
     unsigned char * srcPixels = img.getPixels().getData();
     unsigned char * scanPixels = scan.getPixels().getData();
@@ -43,6 +47,11 @@ void SlitScan::update(ofImage img, int colPosition){
 
 void SlitScan::draw(int x, int y){
     scan.draw(x, y);
+}
+
+void SlitScan::draw(int x, int y, int w, int h){
+    scan.resize(w,h);
+    scan.draw(x,y);
 }
 
 ofImage SlitScan::getImg(){
