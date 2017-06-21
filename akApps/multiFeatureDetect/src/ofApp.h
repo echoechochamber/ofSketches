@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxCv.h"
+#include "SlitScan.h"
 
 class ofApp : public ofBaseApp{
     
@@ -22,6 +23,9 @@ public:
     ofxCv::ObjectFinder face;
     ofxCv::ObjectFinder face_alt;
     ofxCv::ObjectFinder face_profile;
+    
+    ofImage tmpImg; 
+    SlitScan scan;
     
     
 };

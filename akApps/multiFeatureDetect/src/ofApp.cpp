@@ -29,6 +29,8 @@ void ofApp::setup(){
     face_profile.setup("haarcascade_profileface.xml");
      face_profile.setPreset(ObjectFinder::Fast);
     
+    scan.setup(80,80);
+    tmpImg.allocate(640, 480, OF_IMAGE_COLOR); // get an image you can use to get rabber info iinto slitscan
     cam.setup(640,480);
     ofEnableAlphaBlending();
 }
@@ -39,6 +41,11 @@ void ofApp::setup(){
 void ofApp::update(){
     cam.update();
     if(cam.isFrameNew()){
+        // update the slitscan no matter what
+        tmpImg.setFromPixels(cam.getPixels());
+        scan.update(tmpImg, ofGetWidth()/2);
+        
+        // update whatever you need to update
         if(showEye){
             eye.update(cam);
         }
@@ -58,6 +65,8 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     cam.draw(0,0);
+    
+    scan.draw(0,0);
     if(showEye){
         eye.draw();
         ofDrawBitmapStringHighlight("drawing eye", 0, 15);

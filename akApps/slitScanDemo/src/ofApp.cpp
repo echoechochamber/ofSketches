@@ -45,7 +45,7 @@ void ofApp::draw(){
 
 
 void ofApp::movePixelsInImage(ofImage * image) {
-         unsigned char * pixels = image->getPixels().getData(); //equivalent to (*image).getPixels();
+    unsigned char * pixels = image->getPixels().getData(); // the val for the pointers
     for (int x=0; x<camWidth-1; x++) {
         for (int y=0; y<camHeight; y++) {
             int position = y*(camWidth*3)+x*3;
