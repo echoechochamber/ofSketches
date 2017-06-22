@@ -24,8 +24,9 @@ public:
     ofxCv::ObjectFinder face_alt;
     ofxCv::ObjectFinder face_profile;
     
-    ofImage tmpImg; 
+    ofImage tmpImg;
+    ofFbo fbo;
     SlitScan scan;
-    ofRectangle lastDisplayedPosition; 
-    
+    ofRectangle lastDisplayedPosition;
+    int imgPadding;
 };
