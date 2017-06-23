@@ -21,10 +21,14 @@ void SlitScan::setup(int w, int h){
 
 //--------------------------------------------------------------
 void SlitScan::update(ofImage img, int colPosition){
+    int imgWidth = img.getWidth();
+   
     img.resize(scanWidth, scanHeight); // resize the src image so that it's scaled
     if(scan.getWidth() != scanWidth || scan.getHeight() != scanHeight){
         scan.resize(scanWidth, scanHeight);
     }
+//     int scaledColPosition = colPosition/ imgWidth;
+    int scaledColPosition = img.getWidth()/2;
     
     
     unsigned char * srcPixels = img.getPixels().getData();
@@ -36,7 +40,7 @@ void SlitScan::update(ofImage img, int colPosition){
     
     for (int y = 0; y < scanHeight; y++) {
         int imagePosition = y*(scanWidth*3)+(scanWidth-1)*3;
-        int videoPosition = y*(scanWidth*3)+colPosition*3;
+        int videoPosition = y*(scanWidth*3)+ scaledColPosition*3;
         scanPixels[imagePosition]   = srcPixels[videoPosition];
         scanPixels[imagePosition+1] = srcPixels[videoPosition+1];
         scanPixels[imagePosition+2] = srcPixels[videoPosition+2];

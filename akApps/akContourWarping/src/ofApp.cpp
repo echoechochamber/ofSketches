@@ -50,6 +50,7 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     cam.draw(0,0);
+    unwarped.resize(ofGetWidth()/2, ofGetHeight()/2);
     unwarped.draw(0,0);
     if(showContours){
             contourFinder.draw();

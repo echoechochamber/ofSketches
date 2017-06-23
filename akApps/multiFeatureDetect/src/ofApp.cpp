@@ -1,28 +1,38 @@
 #include "ofApp.h"
 using namespace ofxCv;
 using namespace cv;
-/*
- void ofApp::setup() {
-	ofSetVerticalSync(true);
-	ofSetFrameRate(120);
- finder.setup("haarcascade_frontalface_default.xml");
- finder.setPreset(ObjectFinder::Fast);
-	cam.setup(640, 480);
- }*/
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofSetVerticalSync(true);
     ofSetFrameRate(60);
+    ofEnableAlphaBlending();
+    
+    showGui = true;
+    gui.setup();
+    gui.add(showFace.set("Face", true));
+    gui.add(showFaceAlt.set("Face Alt", false));
+    gui.add(showFaceProfile.set("Face Profile", true));
+    gui.add(randScan.set("Scan Randomly", false));
+    gui.add(clearFbo.set("Clear Circles", false));
+    gui.add(maxDistBetweenFrames.set("Max Face Distance", 200.0, 150.0, 500.0));
+    gui.add(erosion.set("Erosion value", 0.0, 0.0, 15.0));
     
     //default to showing the face and nothing else
-    showEye = false;
     showFace = true;
     showFaceAlt = false;
     showFaceProfile = true;
     
-    eye.setup("haarcascade_eye.xml");
-    eye.setPreset(ObjectFinder::Fast);
-    eye.getTracker().setSmoothingRate(.3);
+    
+    w = ofGetWidth();
+    h = ofGetHeight();
+    scanPosition = w/2;
+    imgPadding = 200;
+    
+    
+    // NOTE: next steps : create a vector of face trackers to simplify the code
+    // set up haar cascades
+    // we're using multiple so that there will be a number of versions no matter what
     face.setup("haarcascade_frontalface_default.xml");
     face.setPreset(ObjectFinder::Fast);
     face.getTracker().setSmoothingRate(.3);
@@ -32,14 +42,15 @@ void ofApp::setup(){
     face_profile.setup("haarcascade_profileface.xml");
     face_profile.setPreset(ObjectFinder::Fast);
     face_profile.getTracker().setSmoothingRate(.3);
-    imgPadding = 180;
     
-    scan.setup(120,120);
-    tmpImg.allocate(1024,768, OF_IMAGE_COLOR); // get an image you can use to get rabber info iinto slitscan
-    cam.setup(1024,768);
-    //    fbo.allocate(640,480, GL_LUMINANCE );
-    fbo.allocate(1024,768);
-    ofEnableAlphaBlending();
+    
+    scan.setup(120,120); // set up slit scan
+    tmpImg.allocate(w,h, OF_IMAGE_COLOR); // get an image you can use to get rabber info iinto slitscan
+    
+    cam.setup(w,h);
+    
+    fbo.allocate(w,h); // for alphamasking
+    
 }
 
 
@@ -48,14 +59,19 @@ void ofApp::setup(){
 void ofApp::update(){
     cam.update();
     if(cam.isFrameNew()){
+        
         // update the slitscan no matter what
         tmpImg.setFromPixels(cam.getPixels());
-        scan.update(tmpImg, ofGetWidth()/2);
+        if(randScan){
+            scanPosition = (int)ofRandom((w/2-35),(w/2+35));
+            scan.update(tmpImg, scanPosition);
+        } else {
+            scanPosition = w/2;
+            scan.update(tmpImg, w/2);
+        }
+        
         
         // update whatever you need to update
-        if(showEye){
-            eye.update(cam);
-        }
         if(showFace){
             face.update(cam);
         }
@@ -69,92 +85,65 @@ void ofApp::update(){
     
     // update the fbo
     fbo.begin();
-    ofClear(0, 0, 0, 0);
-    //    ofBackground(255);
-    //    ofSetColor(0);
-    //    ofFill();
+    if(clearFbo){
+        ofClear(0, 0, 0, 0);
+    }
     int fboWidth = ofGetWidth() / 3;
-    int fboHeight =fboWidth;
+    int fboHeight =fboWidth + 200;
     ofDrawEllipse(fboWidth/2, fboHeight/2, fboWidth, fboHeight);
+    
+    int circOffSet = 10;
+    float randW = ofRandom(0.,fboWidth-circOffSet);
+    float randH = ofRandom(0.,fboHeight-circOffSet);
+    ofDrawEllipse(randW, randH,  circOffSet,circOffSet);
     fbo.end();
+    
+    
     
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-    //    ofClear(0,0,0,0);
+    erode(cam, cam, erosion);
     cam.draw(0,0);
     
+    ofRectangle r;
+    if(showFace && face.size() > 0){
+        r = face.getObjectSmoothed(0);
+    } else if(showFaceAlt && face_alt.size() > 0){
+        r = face_alt.getObjectSmoothed(0);
+    } else if(showFaceProfile && face_profile.size() > 0){
+        r = face_profile.getObjectSmoothed(0);
+    } else { // use the last displayed position;
+        r = lastDisplayedPosition;
+    }
     
-    //    scan.draw(0,0);
-    if(showEye){
-        eye.draw();
-        ofDrawBitmapStringHighlight("drawing eye", 0, 15);
+    // if this point is too far from the last position,
+    // assume this is a false positive and just use the last position
+    float distSinceLastFrame = ofDist(r.getX(), r.getY(), lastDisplayedPosition.getX(), lastDisplayedPosition.getY() );
+    if(distSinceLastFrame > maxDistBetweenFrames){
+        r = lastDisplayedPosition;
     }
-    if(showFace){
-        //        face.draw();
-        if(face.size() > 0){
-            ofRectangle r = face.getObjectSmoothed(0); // get the first object
-                                                       //            scan.draw(r.x, r.y, r.width, r.height);
-            
-            // get the image from the scan and mask
-            ofImage scanImg = scan.getImg();
-            scanImg.getTexture().setAlphaMask(fbo.getTexture());
-            scanImg.resize(r.width + imgPadding, r.height+ imgPadding);
-            scanImg.draw(r.x,r.y);
-            lastDisplayedPosition = r;
-        } else {
-            ofImage scanImg = scan.getImg();
-            scanImg.getTexture().setAlphaMask(fbo.getTexture());
-            scanImg.resize(lastDisplayedPosition.width+ imgPadding, lastDisplayedPosition.height+ imgPadding);
-            scanImg.draw(lastDisplayedPosition.x,lastDisplayedPosition.y);
-            //            scan.draw(lastDisplayedPosition.x, lastDisplayedPosition.y, lastDisplayedPosition.width, lastDisplayedPosition.height );
-        }
-        //        ofDrawBitmapStringHighlight("drawing face", 0, 45);
+    
+    //    handle the drawing and alphamasking of the pic
+    ofImage scanImg = scan.getImg();
+    scanImg.getTexture().setAlphaMask(fbo.getTexture());
+    scanImg.resize(r.width + imgPadding, r.height+ (imgPadding*2));
+    scanImg.draw(r.x,(r.y-imgPadding));
+    lastDisplayedPosition = r; // save this position as the last rectangle
+    
+    if(showGui){
+        gui.draw();
     }
-    if(showFaceAlt){
-        face_alt.draw();
-        //        ofDrawBitmapStringHighlight("drawing face alt", 0, 75);
-    }
-    if(showFaceProfile){
-        if(face_profile.size() > 0){
-            ofRectangle r = face.getObjectSmoothed(0); // get the first object
-                                                       //            scan.draw(r.x, r.y, r.width, r.height);
-            
-            // get the image from the scan and mask
-            ofImage scanImg = scan.getImg();
-            scanImg.getTexture().setAlphaMask(fbo.getTexture());
-            scanImg.resize(r.width + imgPadding, r.height+ imgPadding);
-            scanImg.draw(r.x,r.y);
-            lastDisplayedPosition = r;
-        } else {
-            ofImage scanImg = scan.getImg();
-            scanImg.getTexture().setAlphaMask(fbo.getTexture());
-            scanImg.resize(lastDisplayedPosition.width+ imgPadding, lastDisplayedPosition.height+ imgPadding);
-            scanImg.draw(lastDisplayedPosition.x,lastDisplayedPosition.y);
-            //            scan.draw(lastDisplayedPosition.x, lastDisplayedPosition.y, lastDisplayedPosition.width, lastDisplayedPosition.height );
-        }
-        //        face_profile.draw();
-        //        ofDrawBitmapStringHighlight("drawing face profile", 0, 105);
-    }
+    
+    ofDrawLine(scanPosition, 0, scanPosition, h);
     
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-    switch(key){
-        case '1':
-            showEye = !showEye;
-            break;
-        case '2':
-            showFace = !showFace;
-            break;
-        case '3':
-            showFaceAlt = !showFaceAlt;
-            break;
-        case '4':
-            showFaceProfile = !showFaceProfile;
-            break;
-            
+    if(key == 'h'){
+        showGui = !showGui;
     }
 }
+
