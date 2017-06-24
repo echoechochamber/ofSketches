@@ -14,6 +14,16 @@
 /devApps/*/.project
 /devApps/*/.settings/
 
+
+!devApps/
+
+# ignore bin folders' contents, except data folder therein
+/akApps/*/bin/*
+!/akApps/*/bin/data/
+
+/akApps/*/.cproject
+/akApps/*/.project
+/akApps/*/.settings/
 # don't ignore the .gitignore file
 !.gitignore
 
