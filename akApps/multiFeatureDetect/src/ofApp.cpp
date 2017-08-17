@@ -46,8 +46,8 @@ void ofApp::setup(){
     
     scan.setup(120,120); // set up slit scan
     tmpImg.allocate(w,h, OF_IMAGE_COLOR); // get an image you can use to get rabber info iinto slitscan
-    
     cam.setup(w,h);
+
     
     fbo.allocate(w,h); // for alphamasking
     
@@ -136,7 +136,7 @@ void ofApp::draw(){
         gui.draw();
     }
     
-    ofDrawLine(scanPosition, 0, scanPosition, h);
+//    ofDrawLine(scanPosition, 0, scanPosition, h);
     
 }
 

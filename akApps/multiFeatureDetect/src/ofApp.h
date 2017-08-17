@@ -24,8 +24,10 @@ public:
     ofxPanel gui;
     ofParameter<bool> showFace, showFaceAlt, showFaceProfile, randScan, scanVertical, clearFbo;
     ofParameter<float> maxDistBetweenFrames, erosion;
+
     
     int w, h;
+
     ofImage tmpImg;
     ofFbo fbo;
     SlitScan scan;
